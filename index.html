@@ -2,9 +2,10 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>My Timetable 2026</title>
     <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon.png">
     <style>
         :root {
             --bg: #f8f9fa;
@@ -13,67 +14,70 @@
             --english: #ff6b6b; /* 赤 */
             --liberal: #ffd93d;  /* 黄 */
             --special: #6bcb77;  /* 緑 */
-            --empty: #e9ecef;    /* 空きコマ用グレー */
+            --empty: #e9ecef;
             --gray: #ced4da;
         }
 
-        body { font-family: -apple-system, sans-serif; margin: 0; background: var(--bg); color: var(--text); padding-bottom: 50px; }
+        body { 
+            font-family: -apple-system, sans-serif; 
+            margin: 0; 
+            background: var(--bg); 
+            color: var(--text); 
+            padding-bottom: 50px;
+            /* 【修正点1】ダブルタップズームの防止とタップ反応の高速化 */
+            touch-action: manipulation; 
+        }
         
         header { background: #222; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
         .tab-menu { display: flex; justify-content: space-around; }
         .tab-menu button {
-            flex: 1; padding: 15px 0; border: none; background: none; color: #888; font-size: 1rem; transition: 0.3s;
+            flex: 1; padding: 15px 0; border: none; background: none; color: #888; font-size: 1rem;
+            /* ボタンもズーム防止 */
+            touch-action: manipulation;
         }
         .tab-menu button.active { color: white; font-weight: bold; border-bottom: 3px solid white; }
 
-        .day-content { display: none; padding: 15px; animation: fadeIn 0.3s; }
+        .day-content { display: none; padding: 15px; animation: fadeIn 0.2s; }
         .day-content.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        /* 授業カード */
         .period-card {
             background: var(--card); margin-bottom: 12px; border-radius: 12px;
             padding: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);
             border-left: 8px solid var(--gray);
-            transition: all 0.2s;
+            user-select: none; /* 長押しでテキスト選択されるのを防ぐ（アプリ感を出すため） */
         }
         .cat-english { border-left-color: var(--english); }
         .cat-liberal { border-left-color: var(--liberal); }
         .cat-special { border-left-color: var(--special); }
-        
-        /* 空きコマのスタイル（薄く、細く） */
         .cat-empty { 
             border-left-color: var(--gray); 
             background: rgba(233, 236, 239, 0.5); 
             padding: 8px 16px; 
             opacity: 0.6;
-            box-shadow: none;
         }
 
         .main-info { display: flex; align-items: center; justify-content: space-between; }
         .time-tag { font-weight: bold; color: #666; width: 45px; flex-shrink: 0; }
         .subject-name { flex-grow: 1; font-size: 1.05rem; font-weight: 600; margin-left: 5px; }
         .room-tag { font-size: 0.85rem; color: #777; margin-left: 10px; background: #f0f0f0; padding: 2px 6px; border-radius: 4px; }
-        .cat-empty .subject-name { font-weight: normal; color: #999; }
 
-        /* 詳細部分 */
         .details { display: none; margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee; }
         .details.show { display: block; }
         
         .syllabus-btn {
-            display: inline-block; padding: 8px 16px; background: #eee;
-            border-radius: 20px; text-decoration: none; color: #333; font-size: 0.9rem; margin-bottom: 15px;
+            display: inline-block; padding: 10px 20px; background: #444;
+            border-radius: 20px; text-decoration: none; color: white; font-size: 0.9rem; margin-bottom: 15px;
         }
 
         .counter-box {
             display: flex; align-items: center; background: #f1f3f5;
             padding: 10px; border-radius: 8px; justify-content: space-between;
         }
-        .counter-label { font-size: 0.9rem; color: #666; }
-        .absent-count { font-weight: bold; font-size: 1.2rem; color: #ff6b6b; margin: 0 10px; }
+        .absent-count { font-weight: bold; font-size: 1.3rem; color: #ff6b6b; margin: 0 15px; }
         .btn-group button {
-            width: 35px; height: 35px; border-radius: 50%; border: 1px solid #ddd;
-            background: white; font-size: 1.2rem; cursor: pointer;
+            width: 40px; height: 40px; border-radius: 50%; border: none;
+            background: white; font-size: 1.4rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
         .empty-msg { text-align: center; color: #999; margin-top: 50px; }
@@ -98,7 +102,7 @@
             <div id="mon1" class="details">
                 <a href="https://syllabus.ritsumei.ac.jp/syllabus/s/r-syllabus/a0ifD000003RvuHQAS/202632453?language=ja" class="syllabus-btn" target="_blank">📄 シラバスを見る</a>
                 <div class="counter-box" onclick="event.stopPropagation()">
-                    <span class="counter-label">欠席数</span>
+                    <span>欠席数</span>
                     <div class="btn-group"><button onclick="updateCount('mon1', -1)">−</button><span class="absent-count" id="count-mon1">0</span><button onclick="updateCount('mon1', 1)">＋</button></div>
                 </div>
             </div>
@@ -107,7 +111,7 @@
             <div class="main-info"><span class="time-tag">2限</span><span class="subject-name">物質科学</span><span class="room-tag">F301</span></div>
             <div id="mon2" class="details">
                 <a href="https://syllabus.ritsumei.ac.jp/syllabus/s/r-syllabus/a0ifD000003RwZoQAK/202632058" class="syllabus-btn" target="_blank">📄 シラバスを見る</a>
-                <div class="counter-box" onclick="event.stopPropagation()"><span class="counter-label">欠席数</span><div class="btn-group"><button onclick="updateCount('mon2', -1)">−</button><span class="absent-count" id="count-mon2">0</span><button onclick="updateCount('mon2', 1)">＋</button></div></div>
+                <div class="counter-box" onclick="event.stopPropagation()"><div class="btn-group"><button onclick="updateCount('mon2', -1)">−</button><span class="absent-count" id="count-mon2">0</span><button onclick="updateCount('mon2', 1)">＋</button></div></div>
             </div>
         </div>
         <div class="period-card cat-empty"><div class="main-info"><span class="time-tag">3限</span><span class="subject-name">-</span></div></div>
@@ -115,14 +119,14 @@
             <div class="main-info"><span class="time-tag">4限</span><span class="subject-name">ジェンダーとダイバーシティ</span><span class="room-tag">C402</span></div>
             <div id="mon4" class="details">
                 <a href="https://syllabus.ritsumei.ac.jp/syllabus/s/r-syllabus/a0ifD000003RxNSQA0/202634787" class="syllabus-btn" target="_blank">📄 シラバスを見る</a>
-                <div class="counter-box" onclick="event.stopPropagation()"><span class="counter-label">欠席数</span><div class="btn-group"><button onclick="updateCount('mon4', -1)">−</button><span class="absent-count" id="count-mon4">0</span><button onclick="updateCount('mon4', 1)">＋</button></div></div>
+                <div class="counter-box" onclick="event.stopPropagation()"><div class="btn-group"><button onclick="updateCount('mon4', -1)">−</button><span class="absent-count" id="count-mon4">0</span><button onclick="updateCount('mon4', 1)">＋</button></div></div>
             </div>
         </div>
         <div class="period-card cat-liberal" onclick="toggleDetail('mon5')">
             <div class="main-info"><span class="time-tag">5限</span><span class="subject-name">材料と化学</span><span class="room-tag">C203</span></div>
             <div id="mon5" class="details">
                 <a href="https://syllabus.ritsumei.ac.jp/syllabus/s/r-syllabus/a0ifD000003RwNlQAK/202634908" class="syllabus-btn" target="_blank">📄 シラバスを見る</a>
-                <div class="counter-box" onclick="event.stopPropagation()"><span class="counter-label">欠席数</span><div class="btn-group"><button onclick="updateCount('mon5', -1)">−</button><span class="absent-count" id="count-mon5">0</span><button onclick="updateCount('mon5', 1)">＋</button></div></div>
+                <div class="counter-box" onclick="event.stopPropagation()"><div class="btn-group"><button onclick="updateCount('mon5', -1)">−</button><span class="absent-count" id="count-mon5">0</span><button onclick="updateCount('mon5', 1)">＋</button></div></div>
             </div>
         </div>
     </section>
@@ -132,28 +136,28 @@
             <div class="main-info"><span class="time-tag">1限</span><span class="subject-name">英語</span><span class="room-tag">P108</span></div>
             <div id="tue1" class="details">
                 <a href="https://syllabus.ritsumei.ac.jp/syllabus/s/r-syllabus/a0ifD000003RwGPQA0/202631617" class="syllabus-btn" target="_blank">📄 シラバスを見る</a>
-                <div class="counter-box" onclick="event.stopPropagation()"><span class="counter-label">欠席数</span><div class="btn-group"><button onclick="updateCount('tue1', -1)">−</button><span class="absent-count" id="count-tue1">0</span><button onclick="updateCount('tue1', 1)">＋</button></div></div>
+                <div class="counter-box" onclick="event.stopPropagation()"><div class="btn-group"><button onclick="updateCount('tue1', -1)">−</button><span class="absent-count" id="count-tue1">0</span><button onclick="updateCount('tue1', 1)">＋</button></div></div>
             </div>
         </div>
         <div class="period-card cat-special" onclick="toggleDetail('tue2')">
             <div class="main-info"><span class="time-tag">2限</span><span class="subject-name">電子回路Ⅱ</span><span class="room-tag">F306</span></div>
             <div id="tue2" class="details">
                 <a href="https://syllabus.ritsumei.ac.jp/syllabus/s/r-syllabus/a0ifD000003RwW0QAK/202632419" class="syllabus-btn" target="_blank">📄 シラバスを見る</a>
-                <div class="counter-box" onclick="event.stopPropagation()"><span class="counter-label">欠席数</span><div class="btn-group"><button onclick="updateCount('tue2', -1)">−</button><span class="absent-count" id="count-tue2">0</span><button onclick="updateCount('tue2', 1)">＋</button></div></div>
+                <div class="counter-box" onclick="event.stopPropagation()"><div class="btn-group"><button onclick="updateCount('tue2', -1)">−</button><span class="absent-count" id="count-tue2">0</span><button onclick="updateCount('tue2', 1)">＋</button></div></div>
             </div>
         </div>
         <div class="period-card cat-special" onclick="toggleDetail('tue3')">
             <div class="main-info"><span class="time-tag">3限</span><span class="subject-name">電気電子数学演習</span><span class="room-tag">C107</span></div>
             <div id="tue3" class="details">
                 <a href="https://syllabus.ritsumei.ac.jp/syllabus/s/r-syllabus/a0ifD000003RwT6QAK/202632416" class="syllabus-btn" target="_blank">📄 シラバスを見る</a>
-                <div class="counter-box" onclick="event.stopPropagation()"><span class="counter-label">欠席数</span><div class="btn-group"><button onclick="updateCount('tue3', -1)">−</button><span class="absent-count" id="count-tue3">0</span><button onclick="updateCount('tue3', 1)">＋</button></div></div>
+                <div class="counter-box" onclick="event.stopPropagation()"><div class="btn-group"><button onclick="updateCount('tue3', -1)">−</button><span class="absent-count" id="count-tue3">0</span><button onclick="updateCount('tue3', 1)">＋</button></div></div>
             </div>
         </div>
         <div class="period-card cat-special" onclick="toggleDetail('tue4')">
             <div class="main-info"><span class="time-tag">4限</span><span class="subject-name">フーリエ解析</span><span class="room-tag">F306</span></div>
             <div id="tue4" class="details">
                 <a href="https://syllabus.ritsumei.ac.jp/syllabus/s/r-syllabus/a0ifD000003RwAiQAK/202632396" class="syllabus-btn" target="_blank">📄 シラバスを見る</a>
-                <div class="counter-box" onclick="event.stopPropagation()"><span class="counter-label">欠席数</span><div class="btn-group"><button onclick="updateCount('tue4', -1)">−</button><span class="absent-count" id="count-tue4">0</span><button onclick="updateCount('tue4', 1)">＋</button></div></div>
+                <div class="counter-box" onclick="event.stopPropagation()"><div class="btn-group"><button onclick="updateCount('tue4', -1)">−</button><span class="absent-count" id="count-tue4">0</span><button onclick="updateCount('tue4', 1)">＋</button></div></div>
             </div>
         </div>
         <div class="period-card cat-empty"><div class="main-info"><span class="time-tag">5限</span><span class="subject-name">-</span></div></div>
@@ -169,20 +173,20 @@
             <div class="main-info"><span class="time-tag">2限</span><span class="subject-name">電力システム工学</span><span class="room-tag">C109</span></div>
             <div id="thu2" class="details">
                 <a href="https://syllabus.ritsumei.ac.jp/syllabus/s/r-syllabus/a0ifD000003RwgeQAC/202632430" class="syllabus-btn" target="_blank">📄 シラバスを見る</a>
-                <div class="counter-box" onclick="event.stopPropagation()"><span class="counter-label">欠席数</span><div class="btn-group"><button onclick="updateCount('thu2', -1)">−</button><span class="absent-count" id="count-thu2">0</span><button onclick="updateCount('thu2', 1)">＋</button></div></div>
+                <div class="counter-box" onclick="event.stopPropagation()"><div class="btn-group"><button onclick="updateCount('thu2', -1)">−</button><span class="absent-count" id="count-thu2">0</span><button onclick="updateCount('thu2', 1)">＋</button></div></div>
             </div>
         </div>
         <div class="period-card cat-special" onclick="toggleDetail('thu3')">
             <div class="main-info"><span class="time-tag">3限</span><span class="subject-name">パワーエレクトロニクス１</span><span class="room-tag">P201</span></div>
             <div id="thu3" class="details">
                 <a href="https://syllabus.ritsumei.ac.jp/syllabus/s/r-syllabus/a0ifD000003RweiQAC/202632428" class="syllabus-btn" target="_blank">📄 シラバスを見る</a>
-                <div class="counter-box" onclick="event.stopPropagation()"><span class="counter-label">欠席数</span><div class="btn-group"><button onclick="updateCount('thu3', -1)">−</button><span class="absent-count" id="count-thu3">0</span><button onclick="updateCount('thu3', 1)">＋</button></div></div>
+                <div class="counter-box" onclick="event.stopPropagation()"><div class="btn-group"><button onclick="updateCount('thu3', -1)">−</button><span class="absent-count" id="count-thu3">0</span><button onclick="updateCount('thu3', 1)">＋</button></div></div>
             </div>
         </div>
         <div class="period-card cat-special" onclick="toggleDetail('thu45')">
             <div class="main-info"><span class="time-tag">4-5限</span><span class="subject-name">実験</span><span class="room-tag">専門実験</span></div>
             <div id="thu45" class="details">
-                <div class="counter-box" onclick="event.stopPropagation()"><span class="counter-label">欠席数</span><div class="btn-group"><button onclick="updateCount('thu45', -1)">−</button><span class="absent-count" id="count-thu45">0</span><button onclick="updateCount('thu45', 1)">＋</button></div></div>
+                <div class="counter-box" onclick="event.stopPropagation()"><div class="btn-group"><button onclick="updateCount('thu45', -1)">−</button><span class="absent-count" id="count-thu45">0</span><button onclick="updateCount('thu45', 1)">＋</button></div></div>
             </div>
         </div>
     </section>
@@ -194,7 +198,7 @@
             <div class="main-info"><span class="time-tag">3限</span><span class="subject-name">計算機ソフトウェア</span><span class="room-tag">F305</span></div>
             <div id="fri3" class="details">
                 <a href="https://syllabus.ritsumei.ac.jp/syllabus/s/r-syllabus/a0ifD000003RvmXQAS/202632442" class="syllabus-btn" target="_blank">📄 シラバスを見る</a>
-                <div class="counter-box" onclick="event.stopPropagation()"><span class="counter-label">欠席数</span><div class="btn-group"><button onclick="updateCount('fri3', -1)">−</button><span class="absent-count" id="count-fri3">0</span><button onclick="updateCount('fri3', 1)">＋</button></div></div>
+                <div class="counter-box" onclick="event.stopPropagation()"><div class="btn-group"><button onclick="updateCount('fri3', -1)">−</button><span class="absent-count" id="count-fri3">0</span><button onclick="updateCount('fri3', 1)">＋</button></div></div>
             </div>
         </div>
         <div class="period-card cat-empty"><div class="main-info"><span class="time-tag">4限</span><span class="subject-name">-</span></div></div>
@@ -210,18 +214,11 @@
         document.getElementById('btn-' + num).classList.add('active');
     }
 
-    // アコーディオン：1つ開くと他を閉じる
     function toggleDetail(id) {
         const target = document.getElementById(id);
         const isShowing = target.classList.contains('show');
-        
-        // 全ての詳細を一度閉じる
         document.querySelectorAll('.details').forEach(d => d.classList.remove('show'));
-        
-        // クリックしたものが閉じていた場合のみ開く
-        if (!isShowing) {
-            target.classList.add('show');
-        }
+        if (!isShowing) { target.classList.add('show'); }
     }
 
     window.onload = () => {
